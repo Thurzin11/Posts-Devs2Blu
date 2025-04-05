@@ -14,11 +14,13 @@
             background-color: #f4f6f9;
             line-height: 1.7;
         }
+
         .post-container {
             max-width: 800px;
             margin: 0 auto;
             padding: 2rem 1rem;
         }
+
         .post-header {
             background-color: white;
             border-radius: 12px;
@@ -26,44 +28,63 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 2rem;
         }
+
         .post-title {
             color: #2c3e50;
             font-weight: 700;
             margin-bottom: 1rem;
         }
+
         .post-meta {
             color: #7f8c8d;
             margin-bottom: 1.5rem;
         }
+
         .post-content {
             background-color: white;
             border-radius: 12px;
             padding: 2rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+
         .navbar {
             background-color: #ffffff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
+
         .btn-back {
             background-color: #3498db;
             border: none;
             transition: background-color 0.3s ease;
         }
+
         .btn-back:hover {
             background-color: #2980b9;
         }
+
         .btn-delete {
             background-color: #e74c3c;
             border: none;
             transition: background-color 0.3s ease;
         }
+
         .btn-delete:hover {
             background-color: #c0392b;
         }
+
         .post-actions {
             display: flex;
             gap: 10px;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            border: none;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
         }
     </style>
 </head>
@@ -80,7 +101,8 @@
         <div class="post-meta">
             <span><i class="bi bi-person me-2"></i><span th:text="${post.autor}">Author</span></span>
             <span class="mx-2">•</span>
-            <span><i class="bi bi-calendar me-2"></i><span th:text="${#temporals.format(post.data, 'dd MMM yyyy')}">Date</span></span>
+            <span><i class="bi bi-calendar me-2"></i><span
+                    th:text="${#temporals.format(post.data, 'dd MMM yyyy')}">Date</span></span>
         </div>
     </section>
 
@@ -101,30 +123,52 @@
             <h5>Comentários</h5>
 
             <!-- Lista de Comentários -->
-            <div th:if="${post.comments.empty}" class="alert alert-info">
+            <div th:if="${post.comments.isEmpty()}" class="alert alert-info">
                 Nenhum comentário ainda. Seja o primeiro a comentar!
             </div>
 
-            <div th:unless="${post.comments.empty}" class="list-group mt-3">
-                <div th:each="comment : ${post.comments}" class="list-group-item mb-3 rounded shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1 fw-bold" th:text="${comment.autor}"></h6>
-                            <small class="text-muted" th:text="${#temporals.format(comment.data, 'dd/MM/yyyy HH:mm')}"></small>
+            <div th:unless="${post.getComments().isEmpty()}" class="list-group mt-3">
+                <div th:each="comment : ${post.getComments()}"
+                     class="list-group-item mb-3 rounded shadow-sm p-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="w-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 fw-bold text-primary" th:text="${comment.getAuthor()}"></h6>
+                                <small th:text="${#temporals.format(comment.getDate(), 'dd/MM/yyyy HH:mm')}"></small>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <p class="mb-0 text-dark" th:text="${comment.content}"></p>
+                                <form th:action="@{/comment/{commentId}/{postId}(commentId=${comment.getId()}, postId=${comment.getPost().getId()})}"
+                                      method="post">
+                                    <input type="hidden" name="_method" value="delete">
+                                    <button type="submit" class="btn btn-delete"
+                                            onclick="return confirm('Tem certeza que deseja excluir este comentário?')">
+                                        <i class="bi bi-trash"></i> Excluir
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                    <p class="mt-2 mb-0" th:text="${comment.texto}"></p>
                 </div>
             </div>
 
-            <!-- Formulário para novo comentário (opcional) -->
+            <!-- Formulário para novo comentário -->
             <div class="mt-4 border-top pt-3">
-                <form th:action="@{/comment/${id}}" method="post" th:object="${comment}">
+                <form th:action="@{/comment/{postId}(postId=${post.id})}" method="post" th:object="${comment}">
+                    <h2 class="mb-4 text-dark fw-bold fs-3 border-bottom pb-2">
+                        Deixe seu comentário
+                    </h2>
                     <div class="mb-3">
-                        <input type="text" class="form-control" placeholder="Seu nome" name="author" id="author" th:field="*{author}" required>
+                        <input type="text" class="form-control" placeholder="Seu nome"
+                               name="author" id="author" th:field="*{author}" required>
+                        <small class="text-danger" th:if="${#fields.hasErrors('author')}"
+                               th:errors="*{author}"></small>
                     </div>
                     <div class="mb-3">
-                        <textarea class="form-control" rows="3" placeholder="Seu comentário..." name="content" th:field="*{content}" required></textarea>
+            <textarea class="form-control" rows="3" placeholder="Seu comentário..."
+                      name="content" th:field="*{content}" required></textarea>
+                        <small class="text-danger" th:if="${#fields.hasErrors('content')}"
+                               th:errors="*{content}"></small>
                     </div>
                     <button type="submit" class="btn btn-primary btn-sm">Adicionar Comentário</button>
                 </form>

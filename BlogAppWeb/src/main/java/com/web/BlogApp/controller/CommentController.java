@@ -10,11 +10,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.util.UUID;
 
 @Controller
-@RequestMapping("/comment/{postId}/comments")
+@RequestMapping("comment")
 public class CommentController {
     private final CommentService commentService;
     private final PostService postService;
@@ -26,19 +25,31 @@ public class CommentController {
 
     @PostMapping("/{postId}")
     public String addComment(@PathVariable UUID postId,
-                             @Valid @ModelAttribute("comment") CommentDTO commentDTO, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+                             @Valid @ModelAttribute("comment") CommentDTO commentDTO,
+                             BindingResult bindingResult,
+                             RedirectAttributes redirectAttributes) {
+
         if (bindingResult.hasErrors()) {
-        return "postDetails";
+            redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.comment", bindingResult);
+            redirectAttributes.addFlashAttribute("comment", commentDTO);
+            return "redirect:/posts/" + postId;
         }
-        Post post = postService.findById(postId).orElseThrow();
+
+        Post post = postService.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post não encontrado"));
 
         Comment comment = new Comment();
-        comment.setAuthor(comment.getAuthor());
-        comment.setContent(comment.getContent());
+        comment.setAuthor(commentDTO.getAuthor());
+        comment.setContent(commentDTO.getContent());
         comment.setPost(post);
         commentService.save(comment);
 
         return "redirect:/posts/" + postId;
+    }
+
+    @PostMapping("/{id}/{idPost}")
+    public String deleteComment(@PathVariable UUID id,@PathVariable UUID idPost, RedirectAttributes redirectAttributes) {
+        return commentService.delete(id,idPost, redirectAttributes);
     }
 
 }

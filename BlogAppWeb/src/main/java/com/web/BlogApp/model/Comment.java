@@ -2,6 +2,7 @@ package com.web.BlogApp.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -12,9 +13,15 @@ public class Comment {
     private UUID id;
     private String author;
     private String content;
+    private LocalDateTime date;
     @ManyToOne
     @JoinColumn(name = "post_id")
     private Post post;
+
+    @PrePersist
+    protected void onCreate() {
+        date = LocalDateTime.now();
+    }
 
     public UUID getId() {
         return id;
@@ -46,5 +53,13 @@ public class Comment {
 
     public void setPost(Post post) {
         this.post = post;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 }

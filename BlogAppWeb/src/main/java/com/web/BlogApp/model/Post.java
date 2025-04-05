@@ -31,7 +31,7 @@ public class Post {
 	@Lob
 	@Column(columnDefinition="text")
 	private String texto;
-	
+
 	@OneToMany(mappedBy = "post")
 	private List<Comment> comments = new ArrayList<>();
 

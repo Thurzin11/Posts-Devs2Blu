@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.web.BlogApp.dtos.CommentDTO;
 import com.web.BlogApp.model.Post;
 import com.web.BlogApp.service.PostService;
 import org.springframework.stereotype.Controller;
@@ -41,16 +42,16 @@ public class PostController {
 		return mv;
 	}
 
-	@GetMapping(value = "/{id}")
-	public ModelAndView getPostDetails(@PathVariable UUID id) {
-		ModelAndView mv = new ModelAndView("postDetails");
-		Optional<Post> post = postService.findById(id);
+	@GetMapping("/{id}")
+	public String getPost(@PathVariable UUID id, Model model) {
+		Post post = postService.findById(id).orElseThrow();
+		model.addAttribute("post", post);
 
-		if (post.isPresent()) {
-			mv.addObject("post", post.get());
+		if (!model.containsAttribute("comment")) {
+			model.addAttribute("comment", new CommentDTO());
 		}
 
-		return mv;
+		return "postDetails";
 	}
 
 	@GetMapping(value = "/newpost")
