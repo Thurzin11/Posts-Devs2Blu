@@ -1,13 +1,12 @@
 package com.web.BlogApp.controller;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.web.BlogApp.dtos.CommentDTO;
 import com.web.BlogApp.model.Post;
 import com.web.BlogApp.service.PostService;
+import freemarker.core.ReturnInstruction;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -29,29 +28,14 @@ public class PostController {
         this.postService = postService;
     }
 
-//	@GetMapping("/")
-//	public String rootRedirect() {
-//		return "redirect:/";
-//	}
-
 	@GetMapping()
 	public ModelAndView getPosts() {
-		ModelAndView mv = new ModelAndView("posts");
-		List<Post> posts = postService.findAll();
-		mv.addObject("post", posts);
-		return mv;
+		return postService.findAll();
 	}
 
 	@GetMapping("/{id}")
 	public String getPost(@PathVariable UUID id, Model model) {
-		Post post = postService.findById(id).orElseThrow();
-		model.addAttribute("post", post);
-
-		if (!model.containsAttribute("comment")) {
-			model.addAttribute("comment", new CommentDTO());
-		}
-
-		return "postDetails";
+		return postService.findById(id, model);
 	}
 
 	@GetMapping(value = "/newpost")
@@ -64,25 +48,12 @@ public class PostController {
 	public String savePost(@Valid @ModelAttribute("postDto") PostRecordDto postDto,
 						   BindingResult bindingResult,
 						   RedirectAttributes redirectAttributes) {
-		if (bindingResult.hasErrors()) {
-			return "newpostForm";
-		}
-
-		Post post = new Post();
-		post.setAutor(postDto.autor());
-		post.setTitulo(postDto.titulo());
-		post.setTexto(postDto.texto());
-		post.setData(LocalDate.now());
-
-		postService.save(post);
-
-		redirectAttributes.addFlashAttribute("message", "Post created successfully!");
-		return "redirect:/posts";
+		return postService.save(postDto,bindingResult,redirectAttributes);
 	}
 
 	@GetMapping("/edit/{id}")
 	public String showEditForm(@PathVariable UUID id, Model model) {
-		Optional<Post> post = postService.findById(id);
+		Optional<Post> post = postService.findByIdForEdit(id);
 
 		if (post.isPresent()) {
 			Post postModel = post.get();
@@ -104,36 +75,12 @@ public class PostController {
 							 @Valid @ModelAttribute("postDto") PostRecordDto postDto,
 							 BindingResult bindingResult,
 							 RedirectAttributes redirectAttributes) {
+		return postService.edit(id,postDto,bindingResult,redirectAttributes);
 
-		if (bindingResult.hasErrors()) {
-			return "editPostForm";
-		}
-
-		Optional<Post> existingPost = postService.findById(id);
-
-		if (existingPost.isPresent()) {
-			Post postToUpdate = existingPost.get();
-			postToUpdate.setAutor(postDto.autor());
-			postToUpdate.setTitulo(postDto.titulo());
-			postToUpdate.setTexto(postDto.texto());
-
-			postService.save(postToUpdate);
-
-			redirectAttributes.addFlashAttribute("message", "Post updated successfully!");
-		}
-
-		return "redirect:/posts";
 	}
 
 	@GetMapping("/delete/{id}")
 	public String deletePost(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
-		Optional<Post> post = postService.findById(id);
-
-		if (post.isPresent()) {
-			postService.delete(post.get());
-			redirectAttributes.addFlashAttribute("message", "Post deleted successfully!");
-		}
-
-		return "redirect:/posts";
+		return postService.delete(id, redirectAttributes);
 	}
 }
